@@ -7,12 +7,13 @@ use App\Models\Thread;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class UserSeeder extends Seeder
 {
     public function run()
     {
-        User::factory()->create([
+        User::factory()->createQuietly([
             'name' => 'John Doe',
             'email' => 'john@example.com',
             'username' => 'johndoe',
@@ -20,6 +21,8 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
             'type' => User::ADMIN,
         ]);
+
+        DB::beginTransaction();
 
         User::factory()
             ->count(100)
@@ -39,7 +42,9 @@ class UserSeeder extends Seeder
                         ),
                     ),
             )
-            ->create();
+            ->createQuietly();
+
+        DB::commit();
 
         Article::published()
             ->inRandomOrder()

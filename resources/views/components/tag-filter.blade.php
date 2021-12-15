@@ -1,7 +1,10 @@
 @props([
     'activeTag', 
     'tags', 
-    'filter'
+    'filter',
+    'route' => 'forum.tag',
+    'cancelRoute' => 'forum',
+    'jumpTo' => null
 ])
 
 <div 
@@ -14,7 +17,7 @@
             <div class="flex justify-between items-center mb-2" x-cloak>
                 <h3 class="text-3xl font-semibold">Filter tag</h3>
 
-                <button @click="$dispatch('close-modal')">
+                <button @click="activeModal = false">
                     <x-heroicon-o-x class="w-6 h-6" />
                 </button>
             </div>
@@ -44,7 +47,7 @@
         <div class="flex flex-col text-lg p-4">
             @foreach ($tags as $tag)
                 <a 
-                    href="{{ route('forum.tag', [$tag->slug(), 'filter' => $filter]) }}" 
+                    href="{{ route($route, ['tag' => $tag->slug(), 'filter' => $filter]) }}{{ $jumpTo ? '#'.$jumpTo : '' }}" 
                     class="flex items-center py-3.5 hover:text-lio-500"
                     :class="{ 'text-lio-500': '{{ $tag->id() }}' === activeTag }"  
                     x-show="isFiltered('{{ $tag->name() }}')"
@@ -61,11 +64,11 @@
     </div>
 
     <div class="flex gap-x-2 justify-end p-4">
-        <x-buttons.secondary-button @click="$dispatch('close-modal')">
+        <x-buttons.secondary-button @click="activeModal = false">
             Cancel
         </x-buttons.secondary-button>
 
-        <x-buttons.secondary-button href="{{ route('forum') }}" x-show="activeTag">
+        <x-buttons.secondary-button href="{{ route($cancelRoute) }}" x-show="activeTag">
             Remove filter
         </x-buttons.secondary-button>
     </div>

@@ -15,6 +15,7 @@
     </title>
 
     <meta name="description" content="The Laravel portal for problem solving, knowledge sharing and community building." />
+    <link rel="canonical" href="{{ $canonical ?? Request::url() }}" />
 
     <!-- Scripts -->
     <script src="{{ mix('js/app.js') }}" defer></script>
@@ -37,7 +38,7 @@
     @livewireStyles
 </head>
 
-<body class="{{ $bodyClass ?? '' }} {{ isset($isTailwindUi) && $isTailwindUi ? '' : 'standard' }} font-sans bg-white antialiased" x-data="{ activeModal: null }" @close-modal.window="activeModal = false"  @open-modal.window="activeModal = $event.detail">
+<body class="{{ $bodyClass ?? '' }} {{ isset($isTailwindUi) && $isTailwindUi ? '' : 'standard' }} font-sans bg-white antialiased" x-data="{ activeModal: false }" @keyup.escape="activeModal = false">
 
 @include('layouts._ads._banner')
 @include('layouts._nav')
@@ -45,6 +46,8 @@
 @yield('body')
 
 @include('layouts._footer')
+
+@stack('modals')
 
 @livewireScripts
 

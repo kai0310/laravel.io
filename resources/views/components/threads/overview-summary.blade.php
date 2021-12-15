@@ -7,9 +7,7 @@
         <div>
             <div class="flex flex-col lg:flex-row lg:items-center">
                 <div class="flex">
-                    <a href="{{ route('profile', $thread->author()->username()) }}">
-                        <x-avatar :user="$thread->author()" class="w-6 h-6 rounded-full mr-3" />
-                    </a>
+                    <x-avatar :user="$thread->author()" class="w-6 h-6 rounded-full mr-3" />
 
                     <a href="{{ route('profile', $thread->author()->username()) }}" class="hover:underline">
                         <span class="text-gray-900 mr-5">{{ $thread->author()->username() }}</span>
@@ -17,7 +15,7 @@
                 </div>
 
                 <span class="font-mono text-gray-700 mt-1 lg:mt-0">
-                    {{ $thread->createdAt()->format('j M, Y \a\t h:i') }}
+                    {{ $thread->createdAt()->diffForHumans() }}
                 </span>
             </div>
         </div>
@@ -25,7 +23,7 @@
         @if (count($tags = $thread->tags()))
             <div class="flex flex-wrap gap-2 mt-2 lg:mt-0 lg:gap-x-4">
                 @foreach ($tags as $tag)
-                    <a href="{{ route('forum.tag', $tag->slug()) }}">
+                    <a href="{{ route('forum.tag', $tag->slug()) }}" class="flex gap-2">
                         <x-tag>
                             {{ $tag->name() }}
                         </x-tag>
@@ -51,13 +49,13 @@
         <div class="flex gap-x-5">
             <span class="flex items-center gap-x-2">
                 <x-heroicon-o-thumb-up class="w-6 h-6" />
-                <span>{{ count($thread->likes()) }}</span>
+                <span>{{ $thread->like_count }}</span>
                 <span class="sr-only">Likes</span>
             </span>
 
             <span class="flex items-center gap-x-2">
                 <x-heroicon-o-chat-alt-2 class="w-6 h-6" />
-                <span>{{ count($thread->replies()) }}</span>
+                <span>{{ $thread->reply_count }}</span>
                 <span class="sr-only">Replies</span>
             </span>
         </div>

@@ -1,9 +1,11 @@
 const defaultTheme = require('tailwindcss/defaultTheme');
 
 module.exports = {
+    mode: 'jit',
     purge: [
         './resources/**/*.blade.php',
         './resources/**/*.js',
+        './resources/macros/blade.php',
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
     ],
     theme: {
@@ -41,9 +43,14 @@ module.exports = {
                     900: '#343636',
                 },
                 twitter: '#00aaec',
+                facebook: '#4267b2',
+                linkedin: '#2977c9',
             },
             fontFamily: {
                 sans: ['Inter', ...defaultTheme.fontFamily.sans],
+            },
+            minWidth: {
+                8: '2rem',
             },
             maxWidth: {
                 14: '14rem',

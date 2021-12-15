@@ -2,29 +2,23 @@
 
 namespace App\Jobs;
 
+use App\Events\ArticleWasSubmittedForApproval;
 use App\Http\Requests\ArticleRequest;
 use App\Models\Article;
 
 final class UpdateArticle
 {
-    private $article;
-
-    private $title;
-
-    private $body;
-
-    private $shouldBeSubmitted;
-
     private $originalUrl;
 
     private $tags;
 
-    public function __construct(Article $article, string $title, string $body, bool $shouldBeSubmitted, array $options = [])
-    {
-        $this->article = $article;
-        $this->title = $title;
-        $this->body = $body;
-        $this->shouldBeSubmitted = $shouldBeSubmitted;
+    public function __construct(
+        private Article $article,
+        private string $title,
+        private string $body,
+        private bool $shouldBeSubmitted,
+        array $options = []
+    ) {
         $this->originalUrl = $options['original_url'] ?? null;
         $this->tags = $options['tags'] ?? [];
     }
@@ -50,8 +44,15 @@ final class UpdateArticle
             'body' => $this->body,
             'original_url' => $this->originalUrl,
             'slug' => $this->title,
-            'submitted_at' => $this->shouldUpdateSubmittedAt() ? now() : $this->article->submittedAt(),
         ]);
+
+        if ($this->shouldUpdateSubmittedAt()) {
+            $this->article->submitted_at = now();
+            $this->article->save();
+
+            event(new ArticleWasSubmittedForApproval($this->article));
+        }
+
         $this->article->syncTags($this->tags);
 
         return $this->article;

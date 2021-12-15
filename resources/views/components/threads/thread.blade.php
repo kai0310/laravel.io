@@ -6,15 +6,16 @@
         <div class="flex flex-row justify-between items-start lg:items-center">
             <div>
                 <div class="flex flex-col lg:flex-row lg:items-center">
-                    <div>
-                        <a href="{{ route('profile', $thread->author()->username()) }}" class="flex items-center hover:underline">
-                            <x-avatar :user="$thread->author()" class="w-6 h-6 rounded-full mr-3" />
+                    <div class="flex items-center">
+                        <x-avatar :user="$thread->author()" class="w-6 h-6 rounded-full mr-3" />
+
+                        <a href="{{ route('profile', $thread->author()->username()) }}" class="hover:underline">
                             <span class="text-gray-900 mr-5">{{ $thread->author()->username() }}</span>
                         </a>
                     </div>
 
                     <span class="font-mono text-gray-700 mt-1 lg:mt-0">
-                        {{ $thread->createdAt()->format('j M, Y \a\t h:i') }}
+                        {{ $thread->createdAt()->diffForHumans() }}
                     </span>
                 </div>
             </div>
@@ -51,10 +52,24 @@
     <div
         class="prose prose-lio max-w-none p-6 break-words"
         x-data="{}"
-        x-init="function () { highlightCode($el); }"
+        x-init="$nextTick(function () { highlightCode($el); })"
         x-html="{{ json_encode(replace_links(md_to_html($thread->body()))) }}"
     >
     </div>
+
+    @if ($thread->isUpdated())
+        <div class="text-sm text-gray-900 p-6">
+            Last updated
+
+            @if ($updatedBy = $thread->updatedBy())
+                by <a href="{{ route('profile', $updatedBy->username()) }}" class="text-lio-500 border-b-2 pb-0.5 border-lio-100 hover:text-lio-600">
+                    {{ '@'.$thread->updatedBy()->username() }}
+                </a>
+            @endif
+
+            {{ $thread->updated_at->diffForHumans() }}.
+        </div>
+    @endif
 
     <div class="px-6 pb-6">
         <livewire:like-thread :thread="$thread"/>

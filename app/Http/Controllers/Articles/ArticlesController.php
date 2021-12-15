@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Articles;
 
+use App\Concerns\UsesFilters;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\Authenticate;
 use App\Http\Requests\ArticleRequest;
@@ -13,26 +14,59 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Policies\ArticlePolicy;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class ArticlesController extends Controller
 {
+    use UsesFilters;
+
     public function __construct()
     {
         $this->middleware([Authenticate::class, EnsureEmailIsVerified::class], ['except' => ['index', 'show']]);
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $filter = $this->getFilter(['recent', 'popular', 'trending']);
+
         $pinnedArticles = Article::published()
             ->pinned()
+            ->latest('submitted_at')
             ->take(4)
             ->get();
-        $moderators = User::moderators()->get();
 
-        return view('articles.index', [
+        $articles = Article::published()
+            ->notPinned()
+            ->{$filter}();
+
+        $tags = Tag::whereHas('articles', function ($query) {
+            $query->published();
+        })->orderBy('name')->get();
+
+        if ($activeTag = Tag::where('slug', $request->tag)->first()) {
+            $articles->forTag($activeTag->slug());
+        }
+
+        $moderators = Cache::remember('moderators', now()->addMinutes(30), function () {
+            return User::moderators()->get();
+        });
+
+        $canonical = canonical('articles', ['filter' => $filter, 'tag' => $activeTag?->slug()]);
+        $topAuthors = Cache::remember('topAuthors', now()->addMinutes(30), function () {
+            return User::mostSubmissionsInLastDays(365)->take(5)->get();
+        });
+
+        return view('articles.overview', [
             'pinnedArticles' => $pinnedArticles,
+            'articles' => $articles->paginate(10),
+            'tags' => $tags,
+            'activeTag' => $activeTag,
+            'filter' => $filter,
             'moderators' => $moderators,
+            'canonical' => $canonical,
+            'topAuthors' => $topAuthors,
         ]);
     }
 
@@ -45,8 +79,17 @@ class ArticlesController extends Controller
             404,
         );
 
+        $trendingArticles = Cache::remember('trendingArticles', now()->addHour(), function () use ($article) {
+            return Article::published()
+                ->trending()
+                ->whereKeyNot($article->id)
+                ->limit(3)
+                ->get();
+        });
+
         return view('articles.show', [
             'article' => $article,
+            'trendingArticles' => $trendingArticles,
         ]);
     }
 

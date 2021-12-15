@@ -1,36 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
-use App\Models\Thread;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ThreadFactory extends Factory
 {
-    /**
-     * The name of the factory's corresponding model.
-     *
-     * @var string
-     */
-    protected $model = Thread::class;
-
-    /**
-     * Define the model's default state.
-     *
-     * @return array
-     */
-    public function definition()
+    public function definition(): array
     {
         return [
             'subject' => $this->faker->text(20),
             'body' => $this->faker->text,
             'slug' => $this->faker->unique()->slug,
             'author_id' => $attributes['author_id'] ?? User::factory(),
+            'created_at' => $this->faker->dateTimeBetween('-6 months'),
         ];
     }
 
-    public function old()
+    public function old(): self
     {
         return $this->state(['created_at' => now()->subMonths(7)]);
     }

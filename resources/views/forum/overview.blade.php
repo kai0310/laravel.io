@@ -1,5 +1,6 @@
 @php($subTitle = isset($activeTag) ? $activeTag->name() : null)
 @title('Forum' . (isset($subTitle) ? ' > ' . $subTitle : ''))
+@canonical($canonical)
 
 @extends('layouts.default', ['hasShadow' => true, 'isTailwindUi' => true])
 
@@ -104,7 +105,7 @@
                     </div>
 
                     <div class="mt-10">
-                        {{ $threads->onEachSide(1)->links() }}
+                        {{ $threads->appends(Request::only('filter'))->onEachSide(1)->links() }}
                     </div>
                 </section>
             </div>
@@ -124,9 +125,7 @@
                             <li class="{{ ! $loop->last ? 'border-b ' : '' }}pb-3 pt-5">
                                 <div class="flex justify-between items-center px-5">
                                     <div class="flex items-center gap-x-5">
-                                        <a href="{{ route('profile', $member->username()) }}">
-                                            <x-avatar :user="$member" class="w-10 h-10" />
-                                        </a>
+                                        <x-avatar :user="$member" class="w-10 h-10" />
 
                                         <span class="flex flex-col">
                                             <a href="{{ route('profile', $member->username()) }}" class="hover:underline">

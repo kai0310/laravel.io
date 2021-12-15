@@ -1,13 +1,14 @@
 @title($thread->subject())
+@canonical(route('thread', $thread->slug()))
 
-@extends('layouts.default', ['hasShadow' => true])
+@extends('layouts.default', ['hasShadow' => true, 'isTailwindUi' => true])
 
 @section('subnav')
     <section class="container mx-auto bg-white pb-4 px-4 lg:pb-10">
         <h1 class="flex items-center gap-x-3.5 text-xl font-semibold lg:text-3xl">
             <a href="{{ route('forum') }}" class="text-gray-400 hover:underline">Forum</a>
             <x-heroicon-o-chevron-right class="w-6 h-6" />
-            {{ $title }}
+            <span class="break-all">{{ $title }}</span>
         </h1>
     </section>
 @endsection
@@ -15,6 +16,15 @@
 @section('content')
     <section class="pt-5 pb-10 px-4 container mx-auto flex flex-col gap-x-12 lg:flex-row lg:pt-10 lg:pb-0">
         <div class="w-full lg:w-3/4">
+            @unless ($thread->isSolved())
+                @can(App\Policies\ThreadPolicy::UPDATE, $thread)
+                    <div class="bg-lio-500 shadow rounded px-4 py-3 mb-4 text-white text-xs sm:text-sm flex">
+                        <x-heroicon-o-badge-check class="h-4 w-4 inline-block self-center mr-1" />
+                        Please make sure to mark the correct reply as the solution when your question gets answered.
+                    </div>
+                @endcan
+            @endunless
+
             <div class="relative">
                 <div class="relative flex flex-col gap-y-6 z-20">
                     <x-threads.thread :thread="$thread" />
@@ -41,13 +51,14 @@
                         <form action="{{ route('replies.store') }}" method="POST">
                             @csrf
 
-                            @formGroup('body')
-                                <label for="body">Write a reply</label>
+                            <livewire:editor
+                                hasButton
+                                buttonLabel="Reply"
+                                buttonIcon="send"
+                                label="Write a reply"
+                            />
 
-                                @include('_partials._editor', ['content' => old('body')])
-
-                                @error('body')
-                            @endFormGroup
+                            @error('body')
 
                             <input type="hidden" name="replyable_id" value="{{ $thread->id() }}" />
 
@@ -57,14 +68,12 @@
                                 <p>
                                     Please make sure you've read our <a href="{{ route('rules') }}" class="text-lio-500 border-b-2 pb-0.5 border-lio-100 hover:text-lio-600">rules</a> before replying to this thread.
                                 </p>
-
-                                <button type="submit" class="button button-primary">Reply</button>
                             </div>
                         </form>
                     </div>
                 @endif
             @else
-                @if (Auth::guest())
+                @guest
                     <p class="text-center py-8">
                         <a href="{{ route('login') }}" class="text-lio-500 border-b-2 pb-0.5 border-lio-100 hover:text-lio-600">Sign in</a> to participate in this thread!
                     </p>
@@ -79,7 +88,7 @@
                             </x-buttons.arrow-button>
                         </form>
                     </x-info-panel>
-                @endif
+                @endguest
             @endcan
         </div>
 

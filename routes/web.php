@@ -10,7 +10,6 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Forum\TagsController;
 use App\Http\Controllers\Forum\ThreadsController;
 use App\Http\Controllers\HomeController;
@@ -21,6 +20,7 @@ use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController as ProfileSettingsController;
 use App\Http\Controllers\SocialImageController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\Route;
 
 Route::feeds();
@@ -39,7 +39,7 @@ Route::namespace('Auth')->group(function () {
     // Sessions
     Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('login', [LoginController::class, 'login'])->name('login.post');
-    Route::get('logout', [LoginController::class, 'logout'])->name('logout');
+    Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
     // Registration
     Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
@@ -62,8 +62,11 @@ Route::namespace('Auth')->group(function () {
 });
 
 // Users
-Route::get('dashboard', [DashboardController::class, 'show'])->name('dashboard');
-Route::get('user/{username}', [ProfileController::class, 'show'])->name('profile');
+Route::redirect('/dashboard', '/user');
+Route::get('user/{username?}', [ProfileController::class, 'show'])->name('profile');
+
+// Notifications
+Route::view('notifications', 'users.notifications')->name('notifications')->middleware(Authenticate::class);
 
 // Settings
 Route::get('settings', [ProfileSettingsController::class, 'edit'])->name('settings.profile');
@@ -114,16 +117,17 @@ Route::prefix('articles')->group(function () {
 
 // Admin
 Route::prefix('admin')->name('admin')->group(function () {
-    Route::get('/', [UsersController::class, 'index']);
+    Route::get('/', [AdminArticlesController::class, 'index']);
 
     // Users
+    Route::get('users', [UsersController::class, 'index'])->name('.users');
     Route::put('users/{username}/ban', [UsersController::class, 'ban'])->name('.users.ban');
     Route::put('users/{username}/unban', [UsersController::class, 'unban'])->name('.users.unban');
     Route::delete('users/{username}', [UsersController::class, 'delete'])->name('.users.delete');
 
     // Articles
-    Route::get('articles', [AdminArticlesController::class, 'index'])->name('.articles');
     Route::put('articles/{article}/approve', [AdminArticlesController::class, 'approve'])->name('.articles.approve');
     Route::put('articles/{article}/disapprove', [AdminArticlesController::class, 'disapprove'])->name('.articles.disapprove');
+    Route::put('articles/{article}/decline', [AdminArticlesController::class, 'decline'])->name('.articles.decline');
     Route::put('articles/{article}/pinned', [AdminArticlesController::class, 'togglePinnedStatus'])->name('.articles.pinned');
 });

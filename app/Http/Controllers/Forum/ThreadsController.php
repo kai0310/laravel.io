@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Forum;
 
-use App\Helpers\UsesFilters;
+use App\Concerns\UsesFilters;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThreadRequest;
 use App\Jobs\CreateThread;
@@ -20,6 +20,8 @@ use App\Policies\ThreadPolicy;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class ThreadsController extends Controller
 {
@@ -52,15 +54,22 @@ class ThreadsController extends Controller
         }
 
         $tags = Tag::orderBy('name')->get();
-        $topMembers = User::mostSolutionsInLastDays(365)->take(5)->get();
-        $moderators = User::moderators()->get();
+        $topMembers = Cache::remember('topMembers', now()->addMinutes(30), function () {
+            return User::mostSolutionsInLastDays(365)->take(5)->get();
+        });
+        $moderators = Cache::remember('moderators', now()->addMinutes(30), function () {
+            return User::moderators()->get();
+        });
+        $canonical = canonical('forum', ['filter' => $filter]);
 
-        return view('forum.overview', compact('threads', 'filter', 'tags', 'topMembers', 'moderators'));
+        return view('forum.overview', compact('threads', 'filter', 'tags', 'topMembers', 'moderators', 'canonical'));
     }
 
     public function show(Thread $thread)
     {
-        $moderators = User::moderators()->get();
+        $moderators = Cache::remember('moderators', now()->addMinutes(30), function () {
+            return User::moderators()->get();
+        });
 
         return view('forum.threads.show', compact('thread', 'moderators'));
     }
@@ -116,7 +125,7 @@ class ThreadsController extends Controller
     {
         $this->authorize(ThreadPolicy::UPDATE, $thread);
 
-        $this->dispatchNow(new MarkThreadSolution($thread, $reply));
+        $this->dispatchNow(new MarkThreadSolution($thread, $reply, Auth::user()));
 
         return redirect()->route('thread', $thread->slug());
     }

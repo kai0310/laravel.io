@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Helpers\HasTimestamps;
+use App\Concerns\HasTimestamps;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -199,12 +199,12 @@ final class User extends Authenticatable implements MustVerifyEmail
 
     public function latestArticles(int $amount = 10)
     {
-        return $this->articles()->latest()->limit($amount)->get();
+        return $this->articles()->approved()->latest()->limit($amount)->get();
     }
 
     public function countArticles(): int
     {
-        return $this->articles()->count();
+        return $this->articles()->approved()->count();
     }
 
     public static function findByUsername(string $username): self
@@ -249,9 +249,25 @@ final class User extends Authenticatable implements MustVerifyEmail
         }])->orderBy('solutions_count', 'desc');
     }
 
+    public function scopeMostSubmissions(Builder $query, int $inLastDays = null)
+    {
+        return $query->withCount(['articles as articles_count' => function ($query) use ($inLastDays) {
+            if ($inLastDays) {
+                $query->where('articles.approved_at', '>', now()->subDays($inLastDays));
+            }
+
+            return $query;
+        }])->orderBy('articles_count', 'desc');
+    }
+
     public function scopeMostSolutionsInLastDays(Builder $query, int $days)
     {
         return $query->mostSolutions($days);
+    }
+
+    public function scopeMostSubmissionsInLastDays(Builder $query, int $days)
+    {
+        return $query->mostSubmissions($days);
     }
 
     public function scopeWithCounts(Builder $query)

@@ -12,11 +12,14 @@ discussions.
 
 ## Pull Requests
 
+We very much appreciate any help with [open issues labeled with "help wanted"](https://github.com/laravelio/laravel.io/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22).
+
 - **Feature requests** first need to be discussed and accepted [through an issue](https://github.com/laravelio/laravel.io/issues/new) before sending in a pull request
-- **Bug fixes** should contain [regression tests](https://laracasts.com/lessons/regression-testing)
+- **Bug fixes** should contain regression tests
 - All pull requests should follow the [coding standards](#coding-standards)
 - Pull requests will be merged after being reviewed by [the maintainers](README.md#maintainers)
 - Please be respectful to other contributors and hold to [The Code Manifesto](http://codemanifesto.com/)
+- Please post screenshots if you make any changes to the UI
 
 ## Coding Standards
 
@@ -28,4 +31,4 @@ discussions.
 
 All tests can be run with the following commands.
 
-    $ vendor/bin/phpunit
+    $ vendor/bin/pest
